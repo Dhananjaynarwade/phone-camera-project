@@ -1,0 +1,224 @@
+* {
+  box-sizing: border-box;
+}
+
+.droidcam {
+  min-height: 100vh;
+  background: #101114;
+  color: white;
+  padding: 25px;
+  font-family: Arial, sans-serif;
+}
+
+
+/* HEADER */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #191b20;
+  padding: 18px 25px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.header span {
+  color: #aaa;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ddd;
+}
+
+
+/* STATUS DOT */
+
+.dot {
+  width: 12px;
+  height: 12px;
+  background: #777;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot.connected {
+  background: #00d26a;
+  box-shadow: 0 0 10px #00d26a;
+}
+
+
+/* CAMERA AREA */
+
+.camera-area {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+
+/* CAMERA CARD */
+
+.camera-card {
+  background: #191b20;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.camera-header {
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  background: #22242a;
+  font-weight: bold;
+}
+
+
+/* VIDEO */
+
+.video-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: black;
+}
+
+
+/* NO CAMERA */
+
+.no-camera {
+  position: absolute;
+  text-align: center;
+  color: #888;
+  font-size: 18px;
+}
+
+.no-camera p {
+  margin-top: 10px;
+}
+
+
+/* CONTROLS */
+
+.controls {
+  margin-top: 25px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 12px 18px;
+  font-size: 15px;
+  cursor: pointer;
+  color: white;
+  background: #292c33;
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+
+/* STATUS */
+
+.status-box {
+  margin-top: 20px;
+  padding: 15px;
+  background: #191b20;
+  border-radius: 8px;
+  text-align: center;
+}
+
+
+/* PAIRING */
+
+.pairing-section {
+  margin: 25px auto;
+  max-width: 500px;
+  background: #191b20;
+  padding: 25px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.pairing-section h2 {
+  margin-top: 0;
+}
+
+.qr-button {
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.qr-container {
+  margin-top: 20px;
+}
+
+.qr-container img {
+  width: 250px;
+  max-width: 100%;
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.qr-container p {
+  color: #aaa;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 800px) {
+
+  .camera-area {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .video-container {
+    height: 300px;
+  }
+
+  .droidcam {
+    padding: 12px;
+  }
+
+}

@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Django
+*.sqlite3
+db.sqlite3
+
+# Python virtual environment
+venv/
+.venv/
+env/
+
+# Django secrets
+.env
+
+# Node
+node_modules/
+
+# Angular
+.angular/
+dist/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# SSL certificates / private keys
+*.pem
+*.key
+
+# Python cache
+.pytest_cache/

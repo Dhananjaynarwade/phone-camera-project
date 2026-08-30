@@ -1,0 +1,215 @@
+<div class="droidcam">
+
+  <!-- HEADER -->
+  <div class="header">
+
+    <div>
+      <h1>📱 DroidCam</h1>
+      <span>Phone Camera → Laptop</span>
+    </div>
+
+    <div class="connection-status">
+
+      <span
+        class="dot"
+        [class.connected]="status.includes('Connected')">
+      </span>
+
+      {{ status }}
+
+    </div>
+
+  </div>
+
+
+  <!-- CAMERA AREA -->
+
+  <div class="camera-area">
+
+    <!-- PHONE CAMERA -->
+
+    <div class="camera-card">
+
+      <div class="camera-header">
+
+        <span>📱 PHONE CAMERA</span>
+
+        <span *ngIf="localStream">
+          🟢 LIVE
+        </span>
+
+      </div>
+
+      <div class="video-container">
+
+        <video
+          #localVideo
+          autoplay
+          playsinline
+          muted>
+        </video>
+
+        <div
+          class="no-camera"
+          *ngIf="!localStream">
+
+          📷
+          <p>Camera Off</p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- LAPTOP / REMOTE CAMERA -->
+
+    <div class="camera-card">
+
+      <div class="camera-header">
+
+        <span>💻 LAPTOP VIEW</span>
+
+      </div>
+
+      <div class="video-container">
+
+        <video
+          #remoteVideo
+          autoplay
+          playsinline>
+        </video>
+
+        <div class="no-camera">
+
+          🎥
+          <p>Waiting for Phone</p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- CONTROLS -->
+
+  <div class="controls">
+
+    <button
+      class="btn phone"
+      (click)="setRole('sender')">
+
+      📱 Phone
+
+    </button>
+
+
+    <button
+      class="btn laptop"
+      (click)="setRole('receiver')">
+
+      💻 Laptop
+
+    </button>
+
+
+    <button
+      class="btn connect"
+      (click)="connectWebSocket()">
+
+      🔌 Connect
+
+    </button>
+
+
+    <button
+      class="btn camera"
+      (click)="startCamera()"
+      [disabled]="role !== 'sender'">
+
+      📷 Start Camera
+
+    </button>
+
+
+    <button
+      class="btn stop"
+      (click)="stopCamera()">
+
+      ⏹ Stop Camera
+
+    </button>
+
+
+    <button
+      class="btn create"
+      (click)="createOffer()"
+      [disabled]="role !== 'sender' || !localStream">
+
+      📡 Connect Camera
+
+    </button>
+
+
+    <button
+      class="btn disconnect"
+      (click)="disconnect()">
+
+      ❌ Disconnect
+
+    </button>
+
+  </div>
+
+
+  <!-- STATUS -->
+
+  <div class="status-box">
+
+    <strong>Status:</strong>
+
+    {{ status }}
+
+  </div>
+
+
+  <!-- QR CODE -->
+
+  <div class="pairing-section">
+
+    <h2>🔗 Device Pairing</h2>
+
+    <button
+      class="qr-button"
+      (click)="generateQRCode()">
+
+      📱 Generate QR Code
+
+    </button>
+
+
+    <div
+      class="qr-container"
+      *ngIf="qrCodeData">
+
+      <img
+        [src]="qrCodeData"
+        alt="Pairing QR Code">
+
+      <p>
+        Scan this QR code using your phone
+      </p>
+
+      <strong>
+        Pairing ID: {{ pairingId }}
+      </strong>
+
+    </div>
+
+  </div>
+
+</div>

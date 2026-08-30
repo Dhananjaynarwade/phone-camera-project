@@ -1,0 +1,17 @@
+.camera-container {
+  text-align: center;
+  padding: 30px;
+}
+
+video {
+  width: 500px;
+  max-width: 90%;
+  background: black;
+  border-radius: 10px;
+}
+
+button {
+  padding: 12px 20px;
+  margin: 10px;
+  cursor: pointer;
+}
