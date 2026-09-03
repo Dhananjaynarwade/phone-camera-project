@@ -20,85 +20,11 @@
     </div>
 
   </div>
-
-
-  <!-- CAMERA AREA -->
-
-  <div class="camera-area">
-
-    <!-- PHONE CAMERA -->
-
-    <div class="camera-card">
-
-      <div class="camera-header">
-
-        <span>📱 PHONE CAMERA</span>
-
-        <span *ngIf="localStream">
-          🟢 LIVE
-        </span>
-
-      </div>
-
-      <div class="video-container">
-
-        <video
-          #localVideo
-          autoplay
-          playsinline
-          muted>
-        </video>
-
-        <div
-          class="no-camera"
-          *ngIf="!localStream">
-
-          📷
-          <p>Camera Off</p>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- LAPTOP / REMOTE CAMERA -->
-
-    <div class="camera-card">
-
-      <div class="camera-header">
-
-        <span>💻 LAPTOP VIEW</span>
-
-      </div>
-
-      <div class="video-container">
-
-        <video
-          #remoteVideo
-          autoplay
-          playsinline>
-        </video>
-
-        <div class="no-camera">
-
-          🎥
-          <p>Waiting for Phone</p>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
+  
   <!-- CONTROLS -->
-
   <div class="controls">
 
+    <!-- PHONE -->
     <button
       class="btn phone"
       (click)="setRole('sender')">
@@ -108,6 +34,7 @@
     </button>
 
 
+    <!-- LAPTOP -->
     <button
       class="btn laptop"
       (click)="setRole('receiver')">
@@ -117,6 +44,7 @@
     </button>
 
 
+    <!-- CONNECT -->
     <button
       class="btn connect"
       (click)="connectWebSocket()">
@@ -126,6 +54,7 @@
     </button>
 
 
+    <!-- START CAMERA -->
     <button
       class="btn camera"
       (click)="startCamera()"
@@ -136,6 +65,7 @@
     </button>
 
 
+    <!-- STOP CAMERA -->
     <button
       class="btn stop"
       (click)="stopCamera()">
@@ -145,6 +75,7 @@
     </button>
 
 
+    <!-- CONNECT CAMERA -->
     <button
       class="btn create"
       (click)="createOffer()"
@@ -155,6 +86,7 @@
     </button>
 
 
+    <!-- DISCONNECT -->
     <button
       class="btn disconnect"
       (click)="disconnect()">
@@ -167,7 +99,6 @@
 
 
   <!-- STATUS -->
-
   <div class="status-box">
 
     <strong>Status:</strong>
@@ -176,40 +107,188 @@
 
   </div>
 
+<!-- Scan ur laptop code -->
 
-  <!-- QR CODE -->
+  <button
+  class="qr-button"
+  *ngIf="role === 'sender'"
+  (click)="startQRScanner()">
 
-  <div class="pairing-section">
+  📷 Scan Laptop QR
 
-    <h2>🔗 Device Pairing</h2>
+</button>
 
-    <button
-      class="qr-button"
-      (click)="generateQRCode()">
+<div
+  class="qr-scanner"
+  *ngIf="scanningQR">
 
-      📱 Generate QR Code
+  <video
+    #qrVideo
+    autoplay
+    muted
+    playsinline>
+  </video>
 
-    </button>
+  <button
+    class="qr-stop"
+    (click)="stopQRScanner()">
+
+    ❌ Stop Scanner
+
+  </button>
+
+</div>
+  <!-- ================================================= -->
+  <!-- DEVICE PAIRING -->
+  <!-- ================================================= -->
+
+<div class="pairing-section">
+
+  <h2>🔗 Device Pairing</h2>
+
+  <button 
+    class="qr-button" 
+    (click)="generateQRCode()">
+
+    📱 Generate QR Code
+
+  </button>
+
+  <div 
+    class="qr-container" 
+    *ngIf="qrCodeData">
+
+    <img 
+      [src]="qrCodeData" 
+      alt="Pairing QR Code">
+
+    <p>
+      Scan this QR code using your phone
+    </p>
+
+    <strong>
+      Pairing ID: {{ pairingId }}
+    </strong>
+
+  </div>
+
+</div>
 
 
-    <div
-      class="qr-container"
-      *ngIf="qrCodeData">
 
-      <img
-        [src]="qrCodeData"
-        alt="Pairing QR Code">
 
-      <p>
-        Scan this QR code using your phone
-      </p>
 
-      <strong>
-        Pairing ID: {{ pairingId }}
-      </strong>
+  <!-- CAMERA AREA -->
+<div class="camera-area">
+
+ <!-- PHONE CAMERA (Modified with *ngIf) -->
+<div class="camera-card" *ngIf="!scanningQR">
+
+  <div class="camera-header">
+    <span>📱 PHONE CAMERA</span>
+    <span *ngIf="localStream">🟢 LIVE</span>
+    <span *ngIf="!localStream">🔴 OFF</span>
+  </div>
+
+  <div class="video-container">
+    <video
+      #localVideo
+      autoplay
+      playsinline
+      muted>
+    </video>
+    <div class="no-camera" *ngIf="!localStream">
+      📷 <p>Camera Off</p>
+    </div>
+  </div>
+
+</div>
+
+  <!-- LAPTOP VIEW -->
+  <div class="camera-card">
+
+    <div class="camera-header">
+
+      <span>💻 LAPTOP VIEW</span>
+
+      <span *ngIf="remoteStream">
+        🟢 LIVE
+      </span>
+
+      <span *ngIf="!remoteStream">
+        🟡 WAITING
+      </span>
+
+    </div>
+
+    <div class="video-container">
+
+      <video
+        #remoteVideo
+        autoplay
+        playsinline>
+      </video>
+
+      <div
+        class="no-camera"
+        *ngIf="!remoteStream">
+
+        🎥
+        <p>Waiting for Phone</p>
+
+      </div>
 
     </div>
 
   </div>
+
+</div>
+
+
+
+    <!-- ================================================= -->
+    <!-- PHONE: QR SCANNER -->
+    <!-- ================================================= -->
+
+
+
+      <!-- STOP SCANNER -->
+      <button
+        *ngIf="scanningQR"
+        class="btn stop"
+        (click)="stopQRScanner()">
+
+        ⏹ Stop Scanner
+
+      </button>
+
+
+      <!-- QR  SCANNER--->
+     <!-- QR SCANNER -->
+
+<div
+  class="qr-scanner"
+  *ngIf="scanningQR">
+
+  <h2>📷 Scan Laptop QR</h2>
+
+  <video
+    #qrVideo
+    autoplay
+    playsinline
+    muted>
+  </video>
+
+  <p>
+    Point your phone camera at the Laptop QR Code
+  </p>
+
+  <button
+    class="btn stop"
+    (click)="stopQRScanner()">
+
+    ❌ Stop Scanner
+
+  </button>
 
 </div>

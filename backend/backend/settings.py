@@ -25,16 +25,14 @@ SECRET_KEY = 'django-insecure-!@74(7#**+g=q71#_jzp5zfp*@33$_qc!nhv*b7#d69z&(q1sw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-     '192.168.0.116',
-    'localhost',
-    '127.0.0.1',
-]
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,7 +40,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "channels",
-    'daphne',
     "signaling",
 ]
 
@@ -137,3 +134,7 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels.layers.InMemoryChannelLayer",
     },
 }
+CSRF_TRUSTED_ORIGINS = [
+    'http://192.168.0.100:4200',
+    'https://192.168.0.100:4200',
+]

@@ -175,6 +175,7 @@ video {
 .qr-button {
   border: none;
   padding: 12px 20px;
+background-color: red;
   border-radius: 8px;
   background: #3b82f6;
   color: white;
@@ -219,6 +220,95 @@ video {
 
   .droidcam {
     padding: 12px;
+  }
+
+}
+.qr-scanner-section {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.qr-scanner {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 12px;
+  background: #111;
+  text-align: center;
+}
+
+.qr-scanner video {
+  width: 100%;
+  max-width: 400px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #000;
+}
+
+.qr-scanner p {
+  color: white;
+  margin: 15px 0;
+}
+/* =====================================================
+   DEVICE PAIRING COLLAPSE
+===================================================== */
+
+.pairing-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  cursor: pointer;
+
+  padding: 5px 0 15px 0;
+
+  user-select: none;
+}
+
+.pairing-header:hover {
+  opacity: 0.85;
+}
+
+.pairing-header h2 {
+  margin: 0;
+}
+
+.pairing-header span {
+  color: #666;
+}
+
+.collapse-icon {
+  font-size: 20px;
+
+  font-weight: bold;
+
+  color: #333 !important;
+
+  min-width: 30px;
+
+  text-align: center;
+}
+
+.pairing-content {
+  border-top: 1px solid #ddd;
+
+  padding-top: 20px;
+
+  animation: pairingOpen 0.2s ease;
+}
+
+@keyframes pairingOpen {
+
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 
 }

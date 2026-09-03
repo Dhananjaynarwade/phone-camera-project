@@ -7,6 +7,7 @@ import {
 import { CommonModule } from '@angular/common';
 import QRCode from 'qrcode';
 import { BrowserQRCodeReader } from '@zxing/browser';
+
 @Component({
   selector: 'app-webrtc',
   standalone: true,
@@ -15,264 +16,23 @@ import { BrowserQRCodeReader } from '@zxing/browser';
   styleUrl: './webrtc.css'
 })
 export class Webrtc {
-  // =====================================================
-// QR SCANNER
-// =====================================================
-
-qrScanner = new BrowserQRCodeReader();
-
-scanningQR = false;
-
-@ViewChild('qrVideo')
-qrVideo!: ElementRef<HTMLVideoElement>;
-// =====================================================
-// START QR SCANNER
-// =====================================================
-
-// =====================================================
-// START QR SCANNER
-// =====================================================
-
-async startQRScanner(): Promise<void> {
-
-  console.log('📱 SCAN QR BUTTON CLICKED');
-
-  // QR scanner is for Phone
-  if (this.role !== 'sender') {
-
-    this.status =
-      'Select Phone before scanning QR';
-
-    return;
-  }
-
-  this.scanningQR = true;
-
-  this.status =
-    'Opening QR scanner...';
-
-  // Wait for Angular to create <video #qrVideo>
-  setTimeout(async () => {
-
-    try {
-
-      if (!this.qrVideo) {
-
-        console.error(
-          '❌ QR video element not found'
-        );
-
-        this.status =
-          'QR scanner video not ready';
-
-        this.scanningQR = false;
-
-        return;
-      }
-
-      console.log(
-        'QR video element found'
-      );
-
-      // Get available cameras
-      const devices =
-        await BrowserQRCodeReader
-          .listVideoInputDevices();
-
-      console.log(
-        'Available cameras:',
-        devices
-      );
-
-      if (
-        !devices ||
-        devices.length === 0
-      ) {
-
-        this.status =
-          'No camera found';
-
-        this.scanningQR = false;
-
-        return;
-      }
-
-      // Prefer last camera
-      // Usually phone rear camera
-      const deviceId =
-        devices[devices.length - 1]
-          .deviceId;
-
-      console.log(
-        'Using camera:',
-        deviceId
-      );
-
-      this.status =
-        'Camera opened - Scan laptop QR';
-
-      await this.qrScanner
-        .decodeFromVideoDevice(
-
-          deviceId,
-
-          this.qrVideo.nativeElement,
-
-          (result, error) => {
-
-            if (result) {
-
-              console.log(
-                '✅ QR CODE FOUND'
-              );
-
-              console.log(
-                result.getText()
-              );
-
-              this.handleQRCode(
-                result.getText()
-              );
-
-              this.stopQRScanner();
-
-            }
-
-          }
-
-        );
-
-    }
-
-    catch (error) {
-
-      console.error(
-        '❌ QR SCANNER ERROR:',
-        error
-      );
-
-      this.status =
-        'Could not open camera';
-
-      this.scanningQR = false;
-
-    }
-
-  }, 300);
-
-}
-// =====================================================
-// HANDLE QR CODE
-// =====================================================
-
-handleQRCode(
-  qrText: string
-): void {
-
-  console.log(
-    'QR data:',
-    qrText
-  );
-
-  try {
-
-    const data =
-      JSON.parse(qrText);
-
-    if (
-      data.type !==
-      'phone-camera-pair'
-    ) {
-
-      this.status =
-        'Invalid QR code';
-
-      return;
-
-    }
-
-    this.pairingId =
-      data.pairingId;
-
-    console.log(
-      '🔗 Pairing ID:',
-      this.pairingId
-    );
-
-    this.status =
-      'QR scanned - Pairing...';
-
-    // Send pairing information to Django
-
-    this.sendSignal({
-
-      type: 'pair',
-
-      pairingId:
-        this.pairingId
-
-    });
-
-  }
-
-  catch (error) {
-
-    console.error(
-      'Invalid QR:',
-      error
-    );
-
-    this.status =
-      'Invalid QR code';
-
-  }
-
-}// =====================================================
-// STOP QR SCANNER
-// =====================================================
-// =====================================================
-// STOP QR SCANNER
-// =====================================================
-
-stopQRScanner(): void {
-
-  console.log(
-    '🛑 Stopping QR scanner'
-  );
-
-  this.scanningQR = false;
-
-  if (this.qrVideo) {
-
-    const video =
-      this.qrVideo.nativeElement;
-
-    const stream =
-      video.srcObject as MediaStream | null;
-
-    if (stream) {
-
-      stream
-        .getTracks()
-        .forEach(track => {
-
-          track.stop();
-
-        });
-
-    }
-
-    video.srcObject = null;
-
-  }
-
-  this.status =
-    'QR scanner stopped';
-
-}
 
   // =====================================================
-  // VIDEO ELEMENTS
+  // QR SCANNER
+  // =====================================================
+
+  qrScanner = new BrowserQRCodeReader();
+
+  scanningQR = false;
+
+  private qrControls: any = null;
+
+  @ViewChild('qrVideo')
+  qrVideo!: ElementRef<HTMLVideoElement>;
+
+
+  // =====================================================
+  // VIDEO
   // =====================================================
 
   @ViewChild('localVideo')
@@ -283,10 +43,14 @@ stopQRScanner(): void {
 
 
   // =====================================================
-  // CAMERA
+  // STREAMS
   // =====================================================
 
   localStream: MediaStream | null = null;
+
+  remoteStream: MediaStream | null = null;
+
+  devicePaired = false;
 
 
   // =====================================================
@@ -314,10 +78,19 @@ stopQRScanner(): void {
   // ROLE
   // =====================================================
 
-  // sender   = Phone
-  // receiver = Laptop
+  // sender   = PHONE
+  // receiver = LAPTOP
 
   role: 'sender' | 'receiver' | '' = '';
+
+
+  // =====================================================
+  // PAIRING
+  // =====================================================
+
+  pairingId = '';
+
+  qrCodeData = '';
 
 
   // =====================================================
@@ -325,15 +98,6 @@ stopQRScanner(): void {
   // =====================================================
 
   private pendingIceCandidates: RTCIceCandidateInit[] = [];
-
-
-  // =====================================================
-  // QR / PAIRING
-  // =====================================================
-
-  pairingId = '';
-
-  qrCodeData = '';
 
 
   // =====================================================
@@ -346,15 +110,20 @@ stopQRScanner(): void {
 
     this.role = selectedRole;
 
-    console.log('Role:', selectedRole);
+    console.log(
+      'Role:',
+      selectedRole
+    );
 
     if (selectedRole === 'sender') {
 
-      this.status = 'Phone selected';
+      this.status =
+        '📱 Phone selected';
 
     } else {
 
-      this.status = 'Laptop selected';
+      this.status =
+        '💻 Laptop selected';
 
     }
 
@@ -362,10 +131,15 @@ stopQRScanner(): void {
 
 
   // =====================================================
-  // WEBSOCKET
+  // CONNECT WEBSOCKET
   // =====================================================
 
   connectWebSocket(): void {
+
+    console.log(
+      '🔌 Connecting WebSocket...'
+    );
+
 
     if (this.role === '') {
 
@@ -392,23 +166,10 @@ stopQRScanner(): void {
       'Connecting WebSocket...';
 
 
-    /*
-     * IMPORTANT:
-     *
-     * Angular is running on HTTPS.
-     *
-     * Therefore WebSocket should use WSS.
-     *
-     * But your Django development server may currently
-     * only support WS.
-     *
-     * For now we use ws:// because your current
-     * Django/Daphne setup is working with it.
-     */
-
+    // YOUR WIFI IP
     const socket =
       new WebSocket(
-        'ws://192.168.0.116:8000/ws/signaling/'
+        'ws://192.168.0.103:8000/ws/signaling/'
       );
 
 
@@ -422,8 +183,9 @@ stopQRScanner(): void {
     socket.onopen = () => {
 
       console.log(
-        'WebSocket connected'
+        '✅ WebSocket connected'
       );
+
 
       this.status =
         'WebSocket Connected';
@@ -443,9 +205,40 @@ stopQRScanner(): void {
 
 
       console.log(
-        'Role sent:',
+        '📤 Role sent:',
         this.role
       );
+
+
+      // -------------------------------------------------
+      // IF PHONE ALREADY SCANNED QR
+      // -------------------------------------------------
+
+      if (
+        this.role === 'sender' &&
+        this.pairingId
+      ) {
+
+        console.log(
+          '📱 Joining existing pairing:',
+          this.pairingId
+        );
+
+
+        socket.send(
+
+          JSON.stringify({
+
+            type: 'pair',
+
+            pairingId:
+              this.pairingId
+
+          })
+
+        );
+
+      }
 
     };
 
@@ -460,18 +253,20 @@ stopQRScanner(): void {
         try {
 
           const message =
-            JSON.parse(event.data);
+            JSON.parse(
+              event.data
+            );
 
 
           console.log(
-            'Received from Django:',
+            '📥 Received from Django:',
             message
           );
 
 
-          // -------------------------------------------
-          // Connection
-          // -------------------------------------------
+          // =============================================
+          // NORMAL CONNECTION
+          // =============================================
 
           if (
             message.type === 'connection'
@@ -484,9 +279,120 @@ stopQRScanner(): void {
           }
 
 
-          // -------------------------------------------
-          // Signal
-          // -------------------------------------------
+          // =============================================
+          // PAIRING MESSAGE
+          // LAPTOP RECEIVES:
+          // { type: "pairing", data: ... }
+          // =============================================
+
+          if (
+            message.type === 'pairing'
+          ) {
+
+            console.log(
+              '🔗 Pairing message:',
+              message
+            );
+
+
+            const data =
+              message.data;
+
+
+            if (
+              data &&
+              data.type === 'paired'
+            ) {
+
+              this.devicePaired =
+                true;
+
+
+              this.pairingId =
+                data.pairingId ||
+                this.pairingId;
+
+
+              this.status =
+                '✅ Phone paired with Laptop';
+
+
+              console.log(
+                '✅ PAIRING SUCCESS'
+              );
+
+            }
+
+
+            return;
+          }
+
+
+          // =============================================
+          // PHONE RECEIVES:
+          // { type: "paired" }
+          // =============================================
+
+          if (
+            message.type === 'paired'
+          ) {
+
+            console.log(
+              '✅ Phone pairing confirmed'
+            );
+
+
+            this.devicePaired =
+              true;
+
+
+            if (
+              message.pairingId
+            ) {
+
+              this.pairingId =
+                message.pairingId;
+
+            }
+
+
+            this.status =
+              '✅ Phone paired with Laptop';
+
+
+            return;
+          }
+
+
+          // =============================================
+          // PHONE PAIRED MESSAGE
+          // LAPTOP CAN RECEIVE THIS
+          // =============================================
+
+          if (
+            message.type === 'phone-paired'
+          ) {
+
+            console.log(
+              '📱 Phone joined pairing'
+            );
+
+
+            this.devicePaired =
+              true;
+
+
+            this.status =
+              '📱 Phone connected - Ready for camera';
+
+
+            return;
+          }
+
+
+          // =============================================
+          // SIGNAL
+          // =============================================
 
           if (
             message.type !== 'signal'
@@ -503,7 +409,7 @@ stopQRScanner(): void {
           if (!data) {
 
             console.error(
-              'Signal data missing'
+              '❌ Signal data missing'
             );
 
             return;
@@ -511,14 +417,14 @@ stopQRScanner(): void {
 
 
           console.log(
-            'WebRTC signal:',
+            '📡 WebRTC signal:',
             data
           );
 
 
-          // -------------------------------------------
-          // Remote role
-          // -------------------------------------------
+          // =============================================
+          // ROLE
+          // =============================================
 
           if (
             data.type === 'role'
@@ -533,9 +439,9 @@ stopQRScanner(): void {
           }
 
 
-          // -------------------------------------------
+          // =============================================
           // OFFER
-          // -------------------------------------------
+          // =============================================
 
           if (
             data.type === 'offer'
@@ -556,13 +462,14 @@ stopQRScanner(): void {
 
             }
 
+
             return;
           }
 
 
-          // -------------------------------------------
+          // =============================================
           // ANSWER
-          // -------------------------------------------
+          // =============================================
 
           if (
             data.type === 'answer'
@@ -583,13 +490,14 @@ stopQRScanner(): void {
 
             }
 
+
             return;
           }
 
 
-          // -------------------------------------------
+          // =============================================
           // ICE
-          // -------------------------------------------
+          // =============================================
 
           if (
             data.type === 'ice-candidate'
@@ -604,6 +512,7 @@ stopQRScanner(): void {
               data.candidate
             );
 
+
             return;
           }
 
@@ -612,9 +521,10 @@ stopQRScanner(): void {
         catch (error) {
 
           console.error(
-            'WebSocket message error:',
+            '❌ WebSocket message error:',
             error
           );
+
 
           this.status =
             'WebSocket message error';
@@ -632,9 +542,10 @@ stopQRScanner(): void {
       (error: Event) => {
 
         console.error(
-          'WebSocket error:',
+          '❌ WebSocket error:',
           error
         );
+
 
         this.status =
           'WebSocket Error';
@@ -650,8 +561,9 @@ stopQRScanner(): void {
       () => {
 
         console.log(
-          'WebSocket disconnected'
+          '🔌 WebSocket disconnected'
         );
+
 
         this.status =
           'WebSocket Disconnected';
@@ -662,47 +574,181 @@ stopQRScanner(): void {
 
 
   // =====================================================
-  // CAMERA
+  // GENERATE QR CODE
+  // LAPTOP ONLY
   // =====================================================
 
-  async startCamera(): Promise<void> {
+  async generateQRCode(): Promise<void> {
 
     console.log(
-      '📷 Start camera clicked'
+      '🔗 Generate QR clicked'
     );
 
 
-    // Camera only on phone
+    if (
+      this.role !== 'receiver'
+    ) {
+
+      this.status =
+        'Select Laptop first';
+
+      return;
+    }
+
+
+    if (
+      !this.socket ||
+      this.socket.readyState !== WebSocket.OPEN
+    ) {
+
+      this.status =
+        'Connect WebSocket first';
+
+      return;
+    }
+
+
+    // Generate pairing ID
+
+    this.pairingId =
+      Math.random()
+        .toString(36)
+        .substring(2, 11)
+        .toUpperCase();
+
+
+    console.log(
+      '🔗 Pairing ID:',
+      this.pairingId
+    );
+
+
+    // =============================================
+    // TELL DJANGO TO CREATE PAIRING
+    // =============================================
+
+    this.socket.send(
+
+      JSON.stringify({
+
+        type: 'pair-create',
+
+        pairingId:
+          this.pairingId
+
+      })
+
+    );
+
+
+    console.log(
+      '📤 Pairing created request sent'
+    );
+
+
+    // =============================================
+    // CREATE QR
+    // =============================================
+
+    const qrData =
+      JSON.stringify({
+
+        type:
+          'phone-camera-pair',
+
+        pairingId:
+          this.pairingId
+
+      });
+
+
+    try {
+
+      this.qrCodeData =
+        await QRCode.toDataURL(
+
+          qrData,
+
+          {
+            width: 300,
+            margin: 2
+          }
+
+        );
+
+
+      console.log(
+        '✅ QR Code generated'
+      );
+
+
+      this.status =
+        '📱 QR ready - Scan with Phone';
+
+    }
+
+    catch (error) {
+
+      console.error(
+        '❌ QR generation error:',
+        error
+      );
+
+
+      this.status =
+        'QR generation failed';
+
+    }
+
+  }
+
+
+  // =====================================================
+  // START QR SCANNER
+  // PHONE ONLY
+  // =====================================================
+
+  async startQRScanner(): Promise<void> {
+
+    console.log(
+      '📷 SCAN LAPTOP QR CLICKED'
+    );
+
 
     if (
       this.role !== 'sender'
     ) {
 
       this.status =
-        'Only Phone/Sender needs the camera';
+        'Select Phone first';
 
       return;
     }
 
 
-    // HTTPS check
+    // =============================================
+    // SECURE CONTEXT
+    // =============================================
 
     if (
       !window.isSecureContext
     ) {
 
-      this.status =
-        'Camera requires HTTPS';
-
       console.error(
-        'Page is not secure'
+        '❌ HTTPS required'
       );
+
+
+      this.status =
+        'HTTPS is required for camera';
 
       return;
     }
 
 
-    // Browser API check
+    // =============================================
+    // CAMERA API
+    // =============================================
 
     if (
       !navigator.mediaDevices ||
@@ -712,79 +758,501 @@ stopQRScanner(): void {
       this.status =
         'Camera API not available';
 
-      console.error(
-        'getUserMedia not available'
-      );
-
       return;
     }
 
 
-    try {
+    this.scanningQR =
+      true;
 
-      this.status =
-        'Requesting camera permission...';
+
+    this.status =
+      'Opening QR scanner...';
+
+
+    // Wait for Angular DOM
+
+    setTimeout(
+      async () => {
+
+        try {
+
+          if (!this.qrVideo) {
+
+            console.error(
+              '❌ qrVideo not found'
+            );
+
+
+            this.status =
+              'QR video not ready';
+
+
+            this.scanningQR =
+              false;
+
+
+            return;
+          }
+
+
+          console.log(
+            '✅ QR video found'
+          );
+
+
+          const devices =
+            await BrowserQRCodeReader
+              .listVideoInputDevices();
+
+
+          console.log(
+            '📷 Cameras:',
+            devices
+          );
+
+
+          if (
+            !devices ||
+            devices.length === 0
+          ) {
+
+            this.status =
+              'No camera found';
+
+
+            this.scanningQR =
+              false;
+
+
+            return;
+          }
+
+
+          // =========================================
+          // FIND REAR CAMERA
+          // =========================================
+
+          let deviceId =
+            devices[
+              devices.length - 1
+            ].deviceId;
+
+
+          for (
+            const device of devices
+          ) {
+
+            const label =
+              device.label
+                .toLowerCase();
+
+
+            if (
+              label.includes('back') ||
+              label.includes('rear') ||
+              label.includes('environment')
+            ) {
+
+              deviceId =
+                device.deviceId;
+
+              break;
+            }
+
+          }
+
+
+          console.log(
+            '📷 Selected camera:',
+            deviceId
+          );
+
+
+          this.status =
+            '📷 Camera opened - Scan Laptop QR';
+
+
+          // =========================================
+          // START ZXING
+          // =========================================
+
+          await this.qrScanner
+            .decodeFromVideoDevice(
+
+              deviceId,
+
+              this.qrVideo
+                .nativeElement,
+
+              (
+                result,
+                error,
+                controls
+              ) => {
+
+                // Save controls
+
+                if (
+                  controls &&
+                  !this.qrControls
+                ) {
+
+                  this.qrControls =
+                    controls;
+
+                }
+
+
+                if (!result) {
+
+                  return;
+                }
+
+
+                console.log(
+                  '✅ QR CODE FOUND'
+                );
+
+
+                const qrText =
+                  result.getText();
+
+
+                console.log(
+                  '📦 QR:',
+                  qrText
+                );
+
+
+                // =================================
+                // STOP SCANNER
+                // =================================
+
+                if (controls) {
+
+                  controls.stop();
+
+                }
+
+
+                this.qrControls =
+                  null;
+
+
+                this.scanningQR =
+                  false;
+
+
+                // =================================
+                // PROCESS QR
+                // =================================
+
+                this.handleQRCode(
+                  qrText
+                );
+
+              }
+
+            );
+
+        }
+
+        catch (error) {
+
+          console.error(
+            '❌ QR scanner error:',
+            error
+          );
+
+
+          this.scanningQR =
+            false;
+
+
+          this.status =
+            'Could not open camera';
+
+        }
+
+      },
+
+      500
+
+    );
+
+  }
+
+
+  // =====================================================
+  // STOP QR SCANNER
+  // =====================================================
+
+  stopQRScanner(): void {
+
+    console.log(
+      '🛑 Stop QR scanner'
+    );
+
+
+    this.scanningQR =
+      false;
+
+
+    if (
+      this.qrControls
+    ) {
+
+      this.qrControls.stop();
+
+      this.qrControls =
+        null;
+
+    }
+
+
+    if (this.qrVideo) {
+
+      const video =
+        this.qrVideo
+          .nativeElement;
 
 
       const stream =
-        await navigator.mediaDevices
-          .getUserMedia({
-
-            video: {
-
-              facingMode: {
-                ideal: 'environment'
-              }
-
-            },
-
-            audio: false
-
-          });
+        video.srcObject;
 
 
-      this.localStream =
-        stream;
+      if (
+        stream instanceof MediaStream
+      ) {
 
-
-      if (this.localVideo) {
-
-        this.localVideo
-          .nativeElement
-          .srcObject =
-          stream;
-
-
-        await this.localVideo
-          .nativeElement
-          .play();
+        stream
+          .getTracks()
+          .forEach(
+            track =>
+              track.stop()
+          );
 
       }
 
 
-      console.log(
-        '📷 Camera started successfully'
-      );
-
-
-      this.status =
-        'Camera Started';
+      video.srcObject =
+        null;
 
     }
 
-    catch (error) {
+
+    this.status =
+      'QR scanner stopped';
+
+  }
+
+
+  // =====================================================
+  // HANDLE QR CODE
+  // =====================================================
+
+ // =====================================================
+// HANDLE QR CODE
+// =====================================================
+
+async handleQRCode(qrText: string): Promise<void> {
+
+  console.log('📱 QR data:', qrText);
+
+  try {
+
+    const data = JSON.parse(qrText);
+
+    console.log('📦 QR JSON:', data);
+
+    if (data.type !== 'phone-camera-pair') {
+
+      this.status = 'Invalid QR code';
+
+      return;
+    }
+
+    if (!data.pairingId) {
+
+      this.status = 'Pairing ID missing';
+
+      return;
+    }
+
+    // Save pairing ID
+    this.pairingId = data.pairingId;
+
+    console.log(
+      '🔗 Pairing ID:',
+      this.pairingId
+    );
+
+    // Mark paired
+    this.devicePaired = true;
+
+    this.status =
+      '✅ QR scanned - Phone paired with Laptop';
+
+    // ---------------------------------------------
+    // CHECK WEBSOCKET
+    // ---------------------------------------------
+
+    if (
+      !this.socket ||
+      this.socket.readyState !== WebSocket.OPEN
+    ) {
 
       console.error(
-        'Camera error:',
-        error
+        '❌ WebSocket not connected'
       );
 
       this.status =
-        'Camera Error';
+        'QR scanned, but WebSocket is not connected';
+
+      return;
+    }
+
+    // ---------------------------------------------
+    // SEND PAIR REQUEST
+    // ---------------------------------------------
+
+    this.socket.send(
+      JSON.stringify({
+
+        type: 'pair',
+
+        pairingId:
+          this.pairingId
+
+      })
+    );
+
+    console.log(
+      '📤 Pair request sent to Django'
+    );
+
+    this.status =
+      '✅ Pairing successful - Starting phone camera...';
+
+    // ---------------------------------------------
+    // START PHONE CAMERA
+    // ---------------------------------------------
+
+    await this.startCamera();
+
+    // ---------------------------------------------
+    // CREATE WEBRTC OFFER
+    // ---------------------------------------------
+
+    if (this.localStream) {
+
+      console.log(
+        '📡 Creating WebRTC offer...'
+      );
+
+      await this.createOffer();
+
+    } else {
+
+      console.error(
+        '❌ Local camera stream not available'
+      );
+
+      this.status =
+        'Pairing successful, but phone camera failed';
 
     }
 
   }
+
+  catch (error) {
+
+    console.error(
+      '❌ QR parsing error:',
+      error
+    );
+
+    this.status =
+      'Invalid QR code';
+
+  }
+
+}
+
+
+  // =====================================================
+  // START PHONE CAMERA
+  // =====================================================
+async startCamera(): Promise<void> {
+
+  console.log('📷 Starting phone camera...');
+
+  if (this.role !== 'sender') {
+
+    this.status =
+      'Only Phone can start camera';
+
+    return;
+  }
+
+  try {
+
+    this.status =
+      '📷 Requesting phone camera permission...';
+
+    this.localStream =
+      await navigator.mediaDevices.getUserMedia({
+
+        video: {
+          facingMode: {
+            ideal: 'environment'
+          }
+        },
+
+        audio: false
+
+      });
+
+    console.log(
+      '✅ Phone camera stream obtained'
+    );
+
+    if (this.localVideo) {
+
+      const video =
+        this.localVideo.nativeElement;
+
+      video.srcObject =
+        this.localStream;
+
+      await video.play();
+
+    }
+
+    this.status =
+      '📷 Phone camera started';
+
+    console.log(
+      '📷 Camera tracks:',
+      this.localStream.getTracks()
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      '❌ Phone camera error:',
+      error
+    );
+
+    this.status =
+      '❌ Phone camera permission/error';
+
+  }
+
+}
 
 
   // =====================================================
@@ -793,24 +1261,32 @@ stopQRScanner(): void {
 
   stopCamera(): void {
 
-    if (this.localStream) {
+    if (
+      this.localStream
+    ) {
 
       this.localStream
         .getTracks()
         .forEach(
-          track => track.stop()
+          track =>
+            track.stop()
         );
 
-      this.localStream = null;
+
+      this.localStream =
+        null;
 
     }
 
 
-    if (this.localVideo) {
+    if (
+      this.localVideo
+    ) {
 
       this.localVideo
         .nativeElement
-        .srcObject = null;
+        .srcObject =
+        null;
 
     }
 
@@ -827,7 +1303,8 @@ stopQRScanner(): void {
 
 
   // =====================================================
-  // CREATE PEER CONNECTION
+  // CREATE WEBRTC CONNECTION
+  // PHONE ONLY
   // =====================================================
 
   createConnection(): boolean {
@@ -837,28 +1314,28 @@ stopQRScanner(): void {
     ) {
 
       this.status =
-        'Only Phone can create connection';
+        'Only Phone creates connection';
 
       return false;
     }
 
 
-    if (!this.localStream) {
+    if (
+      !this.localStream
+    ) {
 
       this.status =
-        'Please start the camera first';
-
-      console.error(
-        'Camera stream not available'
-      );
+        'Start phone camera first';
 
       return false;
     }
 
 
-    // Close previous connection
+    // Close old connection
 
-    if (this.peerConnection) {
+    if (
+      this.peerConnection
+    ) {
 
       this.peerConnection.close();
 
@@ -881,25 +1358,28 @@ stopQRScanner(): void {
 
 
     console.log(
-      'RTCPeerConnection created'
+      '✅ RTCPeerConnection created'
     );
 
 
-    // =================================================
-    // ADD CAMERA TRACKS
-    // =================================================
+    // =============================================
+    // ADD PHONE CAMERA TRACK
+    // =============================================
 
     this.localStream
       .getTracks()
       .forEach(
         track => {
 
-          if (this.peerConnection) {
+          if (
+            this.peerConnection
+          ) {
 
-            this.peerConnection.addTrack(
-              track,
-              this.localStream!
-            );
+            this.peerConnection
+              .addTrack(
+                track,
+                this.localStream!
+              );
 
           }
 
@@ -907,9 +1387,9 @@ stopQRScanner(): void {
       );
 
 
-    // =================================================
-    // REMOTE VIDEO
-    // =================================================
+    // =============================================
+    // REMOTE STREAM
+    // =============================================
 
     this.peerConnection.ontrack =
       (event: RTCTrackEvent) => {
@@ -920,14 +1400,38 @@ stopQRScanner(): void {
 
 
         if (
-          this.remoteVideo &&
           event.streams.length > 0
         ) {
 
-          this.remoteVideo
-            .nativeElement
-            .srcObject =
+          this.remoteStream =
             event.streams[0];
+
+
+          if (
+            this.remoteVideo
+          ) {
+
+            this.remoteVideo
+              .nativeElement
+              .srcObject =
+              this.remoteStream;
+
+
+            this.remoteVideo
+              .nativeElement
+              .play()
+              .catch(
+                error => {
+
+                  console.error(
+                    'Remote video play error:',
+                    error
+                  );
+
+                }
+              );
+
+          }
 
         }
 
@@ -938,18 +1442,19 @@ stopQRScanner(): void {
       };
 
 
-    // =================================================
-    // ICE CANDIDATE
-    // =================================================
+    // =============================================
+    // ICE
+    // =============================================
 
     this.peerConnection.onicecandidate =
-      (event: RTCPeerConnectionIceEvent) => {
+      (
+        event:
+          RTCPeerConnectionIceEvent
+      ) => {
 
-        if (!event.candidate) {
-
-          console.log(
-            'ICE gathering completed'
-          );
+        if (
+          !event.candidate
+        ) {
 
           return;
         }
@@ -973,15 +1478,18 @@ stopQRScanner(): void {
       };
 
 
-    // =================================================
+    // =============================================
     // CONNECTION STATE
-    // =================================================
+    // =============================================
 
     this.peerConnection
       .onconnectionstatechange =
       () => {
 
-        if (!this.peerConnection) {
+        if (
+          !this.peerConnection
+        ) {
+
           return;
         }
 
@@ -992,7 +1500,7 @@ stopQRScanner(): void {
 
 
         console.log(
-          'WebRTC connection state:',
+          'WebRTC state:',
           state
         );
 
@@ -1036,43 +1544,7 @@ stopQRScanner(): void {
 
         }
 
-
-        if (
-          state === 'closed'
-        ) {
-
-          this.status =
-            'WebRTC connection closed';
-
-        }
-
       };
-
-
-    // =================================================
-    // ICE STATE
-    // =================================================
-
-    this.peerConnection
-      .oniceconnectionstatechange =
-      () => {
-
-        if (!this.peerConnection) {
-          return;
-        }
-
-
-        console.log(
-          'ICE state:',
-          this.peerConnection
-            .iceConnectionState
-        );
-
-      };
-
-
-    this.status =
-      'WebRTC connection created';
 
 
     return true;
@@ -1082,12 +1554,13 @@ stopQRScanner(): void {
 
   // =====================================================
   // CREATE OFFER
+  // PHONE ONLY
   // =====================================================
 
   async createOffer(): Promise<void> {
 
     console.log(
-      '📡 Create offer clicked'
+      '📡 Create offer'
     );
 
 
@@ -1096,28 +1569,27 @@ stopQRScanner(): void {
     ) {
 
       this.status =
-        'Only Phone can create an offer';
+        'Only Phone creates offer';
 
       return;
     }
-
-
-    if (!this.localStream) {
-
-      this.status =
-        'Please start the camera first';
-
-      return;
-    }
-
-
-    const socket =
-      this.socket;
 
 
     if (
-      !socket ||
-      socket.readyState !== WebSocket.OPEN
+      !this.localStream
+    ) {
+
+      this.status =
+        'Start camera first';
+
+      return;
+    }
+
+
+    if (
+      !this.socket ||
+      this.socket.readyState !==
+      WebSocket.OPEN
     ) {
 
       this.status =
@@ -1143,7 +1615,7 @@ stopQRScanner(): void {
 
 
       this.status =
-        'Creating WebRTC Offer...';
+        'Creating WebRTC offer...';
 
 
       const offer =
@@ -1158,42 +1630,39 @@ stopQRScanner(): void {
 
 
       console.log(
-        '📤 WEBRTC OFFER:',
+        '📤 OFFER:',
         offer
       );
 
 
-      socket.send(
+      // =============================================
+      // SEND OFFER THROUGH DJANGO
+      // =============================================
 
-        JSON.stringify({
+      this.sendSignal({
 
-          type:
-            'offer',
+        type:
+          'offer',
 
-          offer:
-            offer
+        offer:
+          offer
 
-        })
-
-      );
-
-
-      console.log(
-        '✅ Offer sent to Django'
-      );
+      });
 
 
       this.status =
-        'Offer sent to Django';
+        '📡 Offer sent to Laptop';
 
     }
+
 
     catch (error) {
 
       console.error(
-        'Offer error:',
+        '❌ Offer error:',
         error
       );
+
 
       this.status =
         'Offer creation failed';
@@ -1205,6 +1674,7 @@ stopQRScanner(): void {
 
   // =====================================================
   // HANDLE OFFER
+  // LAPTOP ONLY
   // =====================================================
 
   async handleOffer(
@@ -1221,8 +1691,6 @@ stopQRScanner(): void {
 
     try {
 
-      // Create receiver connection
-
       this.peerConnection =
         new RTCPeerConnection({
 
@@ -1238,10 +1706,14 @@ stopQRScanner(): void {
         });
 
 
-      // Remote video
+      // =============================================
+      // PHONE VIDEO
+      // =============================================
 
       this.peerConnection.ontrack =
-        (event: RTCTrackEvent) => {
+        (
+          event: RTCTrackEvent
+        ) => {
 
           console.log(
             '🎥 Phone camera received'
@@ -1249,14 +1721,38 @@ stopQRScanner(): void {
 
 
           if (
-            this.remoteVideo &&
             event.streams.length > 0
           ) {
 
-            this.remoteVideo
-              .nativeElement
-              .srcObject =
+            this.remoteStream =
               event.streams[0];
+
+
+            if (
+              this.remoteVideo
+            ) {
+
+              this.remoteVideo
+                .nativeElement
+                .srcObject =
+                this.remoteStream;
+
+
+              this.remoteVideo
+                .nativeElement
+                .play()
+                .catch(
+                  error => {
+
+                    console.error(
+                      'Remote video error:',
+                      error
+                    );
+
+                  }
+                );
+
+            }
 
           }
 
@@ -1267,12 +1763,20 @@ stopQRScanner(): void {
         };
 
 
-      // Receiver ICE
+      // =============================================
+      // ICE
+      // =============================================
 
       this.peerConnection.onicecandidate =
-        (event: RTCPeerConnectionIceEvent) => {
+        (
+          event:
+            RTCPeerConnectionIceEvent
+        ) => {
 
-          if (!event.candidate) {
+          if (
+            !event.candidate
+          ) {
+
             return;
           }
 
@@ -1290,28 +1794,35 @@ stopQRScanner(): void {
         };
 
 
-      // Connection state
+      // =============================================
+      // CONNECTION STATE
+      // =============================================
 
       this.peerConnection
         .onconnectionstatechange =
         () => {
 
-          if (!this.peerConnection) {
+          if (
+            !this.peerConnection
+          ) {
+
             return;
           }
 
 
-          console.log(
-            'Receiver state:',
+          const state =
             this.peerConnection
-              .connectionState
+              .connectionState;
+
+
+          console.log(
+            'Laptop WebRTC state:',
+            state
           );
 
 
           if (
-            this.peerConnection
-              .connectionState ===
-            'connected'
+            state === 'connected'
           ) {
 
             this.status =
@@ -1322,7 +1833,9 @@ stopQRScanner(): void {
         };
 
 
-      // Set offer
+      // =============================================
+      // SET OFFER
+      // =============================================
 
       await this.peerConnection
         .setRemoteDescription(
@@ -1337,12 +1850,16 @@ stopQRScanner(): void {
       );
 
 
-      // Add queued ICE
+      // =============================================
+      // ADD QUEUED ICE
+      // =============================================
 
       await this.addPendingIceCandidates();
 
 
-      // Create answer
+      // =============================================
+      // CREATE ANSWER
+      // =============================================
 
       const answer =
         await this.peerConnection
@@ -1377,16 +1894,18 @@ stopQRScanner(): void {
 
 
       this.status =
-        'Answer sent to Phone';
+        '📡 Answer sent to Phone';
 
     }
+
 
     catch (error) {
 
       console.error(
-        'Offer handling error:',
+        '❌ Offer handling error:',
         error
       );
+
 
       this.status =
         'Offer handling failed';
@@ -1398,6 +1917,7 @@ stopQRScanner(): void {
 
   // =====================================================
   // HANDLE ANSWER
+  // PHONE ONLY
   // =====================================================
 
   async handleAnswer(
@@ -1412,10 +1932,12 @@ stopQRScanner(): void {
     }
 
 
-    if (!this.peerConnection) {
+    if (
+      !this.peerConnection
+    ) {
 
       console.error(
-        'PeerConnection does not exist'
+        '❌ PeerConnection missing'
       );
 
       return;
@@ -1441,16 +1963,18 @@ stopQRScanner(): void {
 
 
       this.status =
-        'WebRTC Answer received';
+        '✅ WebRTC Answer received';
 
     }
+
 
     catch (error) {
 
       console.error(
-        'Answer handling error:',
+        '❌ Answer error:',
         error
       );
+
 
       this.status =
         'Answer handling failed';
@@ -1468,7 +1992,9 @@ stopQRScanner(): void {
     candidate: RTCIceCandidateInit
   ): Promise<void> {
 
-    if (!this.peerConnection) {
+    if (
+      !this.peerConnection
+    ) {
 
       this.pendingIceCandidates
         .push(candidate);
@@ -1505,10 +2031,11 @@ stopQRScanner(): void {
 
     }
 
+
     catch (error) {
 
       console.error(
-        'ICE error:',
+        '❌ ICE error:',
         error
       );
 
@@ -1524,7 +2051,10 @@ stopQRScanner(): void {
   private async addPendingIceCandidates():
     Promise<void> {
 
-    if (!this.peerConnection) {
+    if (
+      !this.peerConnection
+    ) {
+
       return;
     }
 
@@ -1568,10 +2098,11 @@ stopQRScanner(): void {
 
       }
 
+
       catch (error) {
 
         console.error(
-          'Pending ICE error:',
+          '❌ Pending ICE error:',
           error
         );
 
@@ -1590,28 +2121,31 @@ stopQRScanner(): void {
     signal: Record<string, unknown>
   ): void {
 
-    const socket =
-      this.socket;
-
-
     if (
-      !socket ||
-      socket.readyState !== WebSocket.OPEN
+      !this.socket ||
+      this.socket.readyState !==
+      WebSocket.OPEN
     ) {
 
       console.error(
-        'WebSocket not connected'
+        '❌ WebSocket not connected'
       );
+
 
       this.status =
         'WebSocket not connected';
+
 
       return;
     }
 
 
-    socket.send(
-      JSON.stringify(signal)
+    this.socket.send(
+
+      JSON.stringify(
+        signal
+      )
+
     );
 
 
@@ -1624,140 +2158,15 @@ stopQRScanner(): void {
 
 
   // =====================================================
-  // GENERATE QR CODE
-  // =====================================================
-async generateQRCode(): Promise<void> {
-
-  // QR should be generated by Laptop
-
-  if (this.role !== 'receiver') {
-
-    this.status =
-      'Select Laptop before generating QR';
-
-    return;
-
-  }
-
-
-  // WebSocket must be connected
-
-  const socket =
-    this.socket;
-
-
-  if (
-    !socket ||
-    socket.readyState !== WebSocket.OPEN
-  ) {
-
-    this.status =
-      'Connect WebSocket first';
-
-    return;
-
-  }
-
-
-  // Generate pairing ID
-
-  this.pairingId =
-    Math.random()
-      .toString(36)
-      .substring(2, 10)
-      .toUpperCase();
-
-
-  console.log(
-    '🔗 Pairing ID:',
-    this.pairingId
-  );
-
-
-  // Send pairing ID to Django
-
-  socket.send(
-
-    JSON.stringify({
-
-      type:
-        'pair-create',
-
-      pairingId:
-        this.pairingId
-
-    })
-
-  );
-
-
-  console.log(
-    '📤 Pairing ID sent to Django'
-  );
-
-
-  // QR data
-
-  const qrData =
-    JSON.stringify({
-
-      type:
-        'phone-camera-pair',
-
-      pairingId:
-        this.pairingId,
-
-      server:
-        '192.168.0.116:8000'
-
-    });
-
-
-  try {
-
-    this.qrCodeData =
-      await QRCode.toDataURL(
-
-        qrData,
-
-        {
-          width: 300,
-          margin: 2
-        }
-
-      );
-
-
-    console.log(
-      '✅ QR Code generated'
-    );
-
-
-    this.status =
-      'QR ready - Scan with phone';
-
-  }
-
-  catch (error) {
-
-    console.error(
-      '❌ QR generation error:',
-      error
-    );
-
-
-    this.status =
-      'QR generation failed';
-
-  }
-
-}
-
-  // =====================================================
-  // DISCONNECT EVERYTHING
+  // DISCONNECT
   // =====================================================
 
   disconnect(): void {
+
+    // Stop QR
+
+    this.stopQRScanner();
+
 
     // Stop camera
 
@@ -1766,7 +2175,9 @@ async generateQRCode(): Promise<void> {
 
     // Close WebRTC
 
-    if (this.peerConnection) {
+    if (
+      this.peerConnection
+    ) {
 
       this.peerConnection.close();
 
@@ -1778,7 +2189,9 @@ async generateQRCode(): Promise<void> {
 
     // Close WebSocket
 
-    if (this.socket) {
+    if (
+      this.socket
+    ) {
 
       this.socket.close();
 
@@ -1788,9 +2201,15 @@ async generateQRCode(): Promise<void> {
     }
 
 
-    // Clear remote video
+    // Clear remote stream
 
-    if (this.remoteVideo) {
+    this.remoteStream =
+      null;
+
+
+    if (
+      this.remoteVideo
+    ) {
 
       this.remoteVideo
         .nativeElement
@@ -1806,12 +2225,24 @@ async generateQRCode(): Promise<void> {
       [];
 
 
+    this.devicePaired =
+      false;
+
+
+    this.pairingId =
+      '';
+
+
+    this.qrCodeData =
+      '';
+
+
     this.status =
       'Disconnected';
 
 
     console.log(
-      'Disconnected'
+      '🔌 Everything disconnected'
     );
 
   }
