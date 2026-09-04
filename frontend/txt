@@ -1,3 +1,6 @@
+Backend 
+python manage.py runserver 0.0.0.0:8000
+
 cd "/d/Dhananjay AWS/Django Projects/phone-camera-project/frontend"
 
 run:
@@ -15,13 +18,14 @@ Open:
 https://localhost:4200
 On the phone
 
+
 Do not use:
 
 http://192.168.0.103:4200
 
 Use:
 
-https://192.168.0.103:4200
+https://192.168.0.103:4200-
 frontend D:\Dhananjay AWS\Django Projects\phone-camera-project\frontend>
 ng serve --host 0.0.0.0 --port 4200
 cd frontend

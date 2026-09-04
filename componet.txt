@@ -1,0 +1,25 @@
+run this from your frontend folder:
+
+ng generate component component/home
+
+or short:
+ng g c component/home
+
+1. Put navbar in home.html
+
+Open:paste html
+
+2. Add RouterLink to home.ts
+
+Open:
+
+src/app/component/home/home.ts
+
+Because this is a standalone Angular component, import RouterLink and RouterLinkActive.
+
+Use:
+3. Now routing
+
+Open:
+
+src/app/app.routes.ts
