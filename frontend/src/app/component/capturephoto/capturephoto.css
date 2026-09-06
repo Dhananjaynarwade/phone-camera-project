@@ -1,0 +1,54 @@
+.capture-photo {
+  margin-top: 20px;
+  padding: 20px;
+  text-align: center;
+  background: #ffffff;
+  border-radius: 12px;
+}
+
+.capture-photo h2 {
+  margin-bottom: 15px;
+}
+
+.capture-btn,
+.save-btn,
+.delete-btn {
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  margin: 5px;
+}
+
+.capture-btn {
+  background: #0d6efd;
+  color: white;
+}
+
+.save-btn {
+  background: #198754;
+  color: white;
+}
+
+.delete-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.photo-preview {
+  margin-top: 20px;
+}
+
+.photo-preview img {
+  display: block;
+  width: 100%;
+  max-width: 500px;
+  margin: 15px auto;
+  border-radius: 10px;
+  border: 2px solid #ddd;
+}
+
+.photo-buttons {
+  margin-top: 10px;
+}

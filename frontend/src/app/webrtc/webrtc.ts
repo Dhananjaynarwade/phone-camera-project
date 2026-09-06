@@ -7,11 +7,13 @@ import {
 import { CommonModule } from '@angular/common';
 import QRCode from 'qrcode';
 import { BrowserQRCodeReader } from '@zxing/browser';
+import { Capturephoto } from '../component/capturephoto/capturephoto';
+import { Sharedphoto } from '../component/sharedphoto/sharedphoto';
 
 @Component({
   selector: 'app-webrtc',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, Capturephoto,Sharedphoto],
   templateUrl: './webrtc.html',
   styleUrl: './webrtc.css'
 })
@@ -73,6 +75,13 @@ export class Webrtc {
 
   status = 'Not connected';
 
+  // =====================================================
+// SESSION MANAGEMENT
+// =====================================================
+
+sessionActive = false;
+connectionLost = false;
+
 
   // =====================================================
   // ROLE
@@ -98,37 +107,67 @@ export class Webrtc {
   // =====================================================
 
   private pendingIceCandidates: RTCIceCandidateInit[] = [];
+  receivedPhoto: string | null = null;
+// =====================================================
+// SET ROLE
+// =====================================================
 
+setRole(
+  selectedRole: 'sender' | 'receiver'
+): void {
 
-  // =====================================================
-  // SET ROLE
-  // =====================================================
+  this.role = selectedRole;
 
-  setRole(
-    selectedRole: 'sender' | 'receiver'
-  ): void {
+  console.log(
+    'Role:',
+    selectedRole
+  );
 
-    this.role = selectedRole;
+  if (selectedRole === 'sender') {
 
-    console.log(
-      'Role:',
-      selectedRole
-    );
+    this.status =
+      '📱 Phone selected';
 
-    if (selectedRole === 'sender') {
+  } else {
 
-      this.status =
-        '📱 Phone selected';
-
-    } else {
-
-      this.status =
-        '💻 Laptop selected';
-
-    }
+    this.status =
+      '💻 Laptop selected';
 
   }
+}
 
+
+// =====================================================
+// SEND CAPTURED PHOTO
+// =====================================================
+
+sendPhoto(photo: string): void {
+
+  console.log('📸 Sending captured photo...');
+
+  if (
+    !this.socket ||
+    this.socket.readyState !== WebSocket.OPEN
+  ) {
+
+    console.error(
+      '❌ WebSocket not connected'
+    );
+
+    return;
+  }
+
+  this.socket.send(
+    JSON.stringify({
+      type: 'photo',
+      photo: photo
+    })
+  );
+
+  console.log(
+    '📤 Photo sent to other device'
+  );
+}
 
   // =====================================================
   // CONNECT WEBSOCKET
@@ -169,7 +208,7 @@ export class Webrtc {
     // YOUR WIFI IP
     const socket =
       new WebSocket(
-        'ws://192.168.0.103:8000/ws/signaling/'
+        'ws://192.168.0.105:8000/ws/signaling/'
       );
 
 
@@ -185,10 +224,12 @@ export class Webrtc {
       console.log(
         '✅ WebSocket connected'
       );
+      this.connectionLost = false;
 
 
       this.status =
         'WebSocket Connected';
+
 
 
       socket.send(
@@ -263,6 +304,20 @@ export class Webrtc {
             message
           );
 
+// =====================================================
+// RECEIVE PHOTO
+// =====================================================
+
+if (message.type === 'photo') {
+
+  console.log('📸 PHOTO RECEIVED FROM OTHER DEVICE');
+
+  this.receivedPhoto = message.photo;
+
+  console.log('✅ Received photo stored');
+
+  return;
+}
 
           // =============================================
           // NORMAL CONNECTION
@@ -558,15 +613,17 @@ export class Webrtc {
     // =================================================
 
     socket.onclose =
-      () => {
+() => {
 
         console.log(
           '🔌 WebSocket disconnected'
         );
+        this.connectionLost=true;
+        this.sessionActive=false;
 
 
         this.status =
-          'WebSocket Disconnected';
+            '🔴 Connection Lost - Create a new session';
 
       };
 
@@ -1482,69 +1539,60 @@ async startCamera(): Promise<void> {
     // CONNECTION STATE
     // =============================================
 
-    this.peerConnection
-      .onconnectionstatechange =
-      () => {
+  // =============================================
+// CONNECTION STATE
+// =============================================
 
-        if (
-          !this.peerConnection
-        ) {
+this.peerConnection.onconnectionstatechange = () => {
 
-          return;
-        }
+  if (!this.peerConnection) {
+    return;
+  }
 
+  const state = this.peerConnection.connectionState;
 
-        const state =
-          this.peerConnection
-            .connectionState;
+  console.log('WebRTC state:', state);
 
 
-        console.log(
-          'WebRTC state:',
-          state
-        );
+  // CONNECTION STARTING
+  if (state === 'connecting') {
+
+    this.status = 'WebRTC connecting...';
+
+  }
 
 
-        if (
-          state === 'connecting'
-        ) {
+  // CONNECTION SUCCESS
+  if (state === 'connected') {
 
-          this.status =
-            'WebRTC connecting...';
+    this.sessionActive = true;
+    this.connectionLost = false;
 
-        }
+    this.status = '🟢 Live Video Connected';
 
+    console.log('🟢 SESSION ACTIVE');
 
-        if (
-          state === 'connected'
-        ) {
-
-          this.status =
-            '🎥 Live Video Connected';
-
-        }
+  }
 
 
-        if (
-          state === 'disconnected'
-        ) {
+  // CONNECTION LOST
+  if (
+    state === 'disconnected' ||
+    state === 'failed' ||
+    state === 'closed'
+  ) {
 
-          this.status =
-            'WebRTC disconnected';
+    this.sessionActive = false;
+    this.connectionLost = true;
 
-        }
+    this.status =
+      '🔴 Connection Lost - Create a new session';
 
+    console.log('🔴 SESSION LOST');
 
-        if (
-          state === 'failed'
-        ) {
+  }
 
-          this.status =
-            'WebRTC connection failed';
-
-        }
-
-      };
+};
 
 
     return true;
@@ -1794,45 +1842,64 @@ async startCamera(): Promise<void> {
         };
 
 
-      // =============================================
-      // CONNECTION STATE
-      // =============================================
+     // =============================================
+// LAPTOP CONNECTION STATE
+// =============================================
 
-      this.peerConnection
-        .onconnectionstatechange =
-        () => {
+this.peerConnection.onconnectionstatechange = () => {
 
-          if (
-            !this.peerConnection
-          ) {
+  if (!this.peerConnection) {
+    return;
+  }
 
-            return;
-          }
+  const state =
+    this.peerConnection.connectionState;
 
+  console.log(
+    'Laptop WebRTC state:',
+    state
+  );
 
-          const state =
-            this.peerConnection
-              .connectionState;
+  if (state === 'connecting') {
 
+    this.status =
+      'WebRTC connecting...';
 
-          console.log(
-            'Laptop WebRTC state:',
-            state
-          );
+  }
 
+  if (state === 'connected') {
 
-          if (
-            state === 'connected'
-          ) {
+    this.sessionActive = true;
+    this.connectionLost = false;
 
-            this.status =
-              '🎥 Live Video Connected';
+    this.status =
+      '🟢 Live Video Connected';
 
-          }
+    console.log(
+      '🟢 LAPTOP SESSION ACTIVE'
+    );
 
-        };
+  }
 
+  if (
+    state === 'disconnected' ||
+    state === 'failed' ||
+    state === 'closed'
+  ) {
 
+    this.sessionActive = false;
+    this.connectionLost = true;
+
+    this.status =
+      '🔴 Connection Lost - Create a new session';
+
+    console.log(
+      '🔴 LAPTOP SESSION LOST'
+    );
+
+  }
+
+};
       // =============================================
       // SET OFFER
       // =============================================
@@ -2155,7 +2222,69 @@ async startCamera(): Promise<void> {
     );
 
   }
+// =====================================================
+// END SESSION
+// =====================================================
 
+endSession(): void {
+
+  console.log('🛑 Ending session...');
+
+  // Stop QR scanner
+  this.stopQRScanner();
+
+  // Stop camera
+  this.stopCamera();
+
+  // Close WebRTC
+  if (this.peerConnection) {
+    this.peerConnection.close();
+    this.peerConnection = null;
+  }
+
+  // Close WebSocket
+  if (this.socket) {
+    this.socket.close();
+    this.socket = null;
+  }
+
+  // Clear remote video
+  this.remoteStream = null;
+
+  if (this.remoteVideo) {
+    this.remoteVideo.nativeElement.srcObject = null;
+  }
+
+  // Clear session data
+  this.pendingIceCandidates = [];
+  this.devicePaired = false;
+  this.pairingId = '';
+  this.qrCodeData = '';
+
+  // Session state
+  this.sessionActive = false;
+  this.connectionLost = false;
+
+  this.status = 'Session ended';
+
+  console.log('✅ Session ended successfully');
+}
+// =====================================================
+// CREATE NEW SESSION
+// =====================================================
+
+createNewSession(): void {
+
+  console.log('🔄 Creating new session...');
+
+  // Reset everything
+  this.endSession();
+
+  // Reset status
+  this.status = 'Ready for new session';
+
+  console.log('🆕 New session ready');
+}
 
   // =====================================================
   // DISCONNECT
@@ -2245,6 +2374,12 @@ async startCamera(): Promise<void> {
       '🔌 Everything disconnected'
     );
 
+    
   }
+  // =====================================================
+// SEND CAPTURED PHOTO TO OTHER DEVICE
+// =====================================================
+
 
 }
+

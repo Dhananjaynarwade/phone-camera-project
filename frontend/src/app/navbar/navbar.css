@@ -1,0 +1,104 @@
+/* =========================================
+   NAVBAR LINKS
+========================================= */
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.nav-links a {
+  position: relative;
+
+  color: #b8bcc6;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+
+  padding: 8px 2px;
+
+  transition:
+    color 0.3s ease,
+    transform 0.3s ease;
+}
+
+
+/* Hover text */
+
+.nav-links a:hover {
+  color: #ffffff;
+
+  transform: translateY(-2px);
+}
+
+
+/* =========================================
+   ANIMATED UNDERLINE
+========================================= */
+
+.nav-links a::after {
+  content: "";
+
+  position: absolute;
+
+  left: 50%;
+  bottom: -3px;
+
+  width: 0;
+  height: 3px;
+
+  border-radius: 10px;
+
+  background: linear-gradient(
+    90deg,
+    #00d26a,
+    #00f5a0
+  );
+
+  box-shadow:
+    0 0 8px rgba(0, 210, 106, 0.7);
+
+  transform: translateX(-50%);
+
+  transition:
+    width 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+
+/* Hover underline */
+
+.nav-links a:hover::after {
+  width: 100%;
+
+  box-shadow:
+    0 0 8px rgba(0, 210, 106, 0.8),
+    0 0 16px rgba(0, 210, 106, 0.4);
+}
+
+
+/* =========================================
+   ACTIVE LINK
+========================================= */
+
+.nav-links a.active {
+  color: 	#000068
+}
+
+
+/* Active underline */
+
+.nav-links a.active::after {
+  width: 100%;
+
+  background: linear-gradient(
+    90deg,
+    #00d26a,
+    #00f5a0
+  );
+
+  box-shadow:
+    0 0 8px rgba(0, 210, 106, 0.8),
+    0 0 18px rgba(0, 210, 106, 0.35);
+}

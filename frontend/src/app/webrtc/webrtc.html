@@ -22,100 +22,139 @@
   </div>
   
   <!-- CONTROLS -->
-  <div class="controls">
+  <!-- PHONE -->
+<!-- ================================================= -->
+<!-- CONTROLS -->
+<!-- ================================================= -->
 
-    <!-- PHONE -->
-    <button
-      class="btn phone"
-      (click)="setRole('sender')">
+<div class="controls">
 
-      📱 Phone
+  <!-- PHONE -->
+  <button
+    *ngIf="!sessionActive && !connectionLost"
+    class="btn phone"
+    (click)="setRole('sender')">
 
-    </button>
+    📱 Phone
 
-
-    <!-- LAPTOP -->
-    <button
-      class="btn laptop"
-      (click)="setRole('receiver')">
-
-      💻 Laptop
-
-    </button>
+  </button>
 
 
-    <!-- CONNECT -->
-    <button
-      class="btn connect"
-      (click)="connectWebSocket()">
+  <!-- LAPTOP -->
+  <button
+    *ngIf="!sessionActive && !connectionLost"
+    class="btn laptop"
+    (click)="setRole('receiver')">
 
-      🔌 Connect
+    💻 Laptop
 
-    </button>
-
-
-    <!-- START CAMERA -->
-    <button
-      class="btn camera"
-      (click)="startCamera()"
-      [disabled]="role !== 'sender'">
-
-      📷 Start Camera
-
-    </button>
+  </button>
 
 
-    <!-- STOP CAMERA -->
-    <button
-      class="btn stop"
-      (click)="stopCamera()">
+  <!-- CONNECT WEBSOCKET -->
+  <button
+    *ngIf="!sessionActive && !connectionLost"
+    class="btn connect"
+    (click)="connectWebSocket()">
 
-      ⏹ Stop Camera
+    🔌 Connect
 
-    </button>
-
-
-    <!-- CONNECT CAMERA -->
-    <button
-      class="btn create"
-      (click)="createOffer()"
-      [disabled]="role !== 'sender' || !localStream">
-
-      📡 Connect Camera
-
-    </button>
+  </button>
 
 
-    <!-- DISCONNECT -->
-    <button
-      class="btn disconnect"
-      (click)="disconnect()">
+  <!-- START CAMERA -->
+  <button
+    *ngIf="!sessionActive && !connectionLost"
+    class="btn camera"
+    (click)="startCamera()"
+    [disabled]="role !== 'sender'">
 
-      ❌ Disconnect
+    📷 Start Camera
 
-    </button>
-
-  </div>
+  </button>
 
 
-  <!-- STATUS -->
-  <div class="status-box">
+  <!-- STOP CAMERA -->
+  <button
+    *ngIf="!sessionActive && !connectionLost"
+    class="btn stop"
+    (click)="stopCamera()">
 
-    <strong>Status:</strong>
+    ⏹ Stop Camera
 
-    {{ status }}
+  </button>
 
-  </div>
+
+  <!-- CONNECT CAMERA -->
+  <button
+    *ngIf="!sessionActive && !connectionLost"
+    class="btn create"
+    (click)="createOffer()"
+    [disabled]="role !== 'sender' || !localStream">
+
+    📡 Connect Camera
+
+  </button>
+
+
+  <!-- END SESSION -->
+  <button
+    *ngIf="sessionActive"
+    class="btn disconnect"
+    (click)="endSession()">
+
+    ⛔ End Session
+
+  </button>
+  
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- CONNECTION LOST -->
+<!-- ================================================= -->
+
+<div
+  class="connection-lost"
+  *ngIf="connectionLost">
+
+  <h3>🔴 Connection Lost</h3>
+
+  <p>
+    The connection with the other device was lost.
+  </p>
+
+  <button
+    class="btn create-new"
+    (click)="createNewSession()">
+
+    🔄 Create New Session
+
+  </button>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- STATUS -->
+<!-- ================================================= -->
+
+<div class="status-box">
+
+  <strong>Status:</strong>
+
+  {{ status }}
+
+</div>
 
 <!-- Scan ur laptop code -->
 
-  <button
-  class="qr-button"
-  *ngIf="role === 'sender'"
+ <button 
+  class="qr-button" 
+  *ngIf="role === 'sender' && !sessionActive && !connectionLost"
   (click)="startQRScanner()">
-
   📷 Scan Laptop QR
-
 </button>
 
 <div
@@ -146,13 +185,12 @@
 
   <h2>🔗 Device Pairing</h2>
 
-  <button 
-    class="qr-button" 
-    (click)="generateQRCode()">
-
-    📱 Generate QR Code
-
-  </button>
+  <button  
+  *ngIf="!sessionActive && !connectionLost"
+  class="qr-button"  
+  (click)="generateQRCode()">
+  📱 Generate QR Code
+</button>
 
   <div 
     class="qr-container" 
@@ -177,75 +215,95 @@
 
 
 
-
-  <!-- CAMERA AREA -->
-<div class="camera-area">
-
- <!-- PHONE CAMERA (Modified with *ngIf) -->
 <div class="camera-card" *ngIf="!scanningQR">
 
   <div class="camera-header">
+
     <span>📱 PHONE CAMERA</span>
-    <span *ngIf="localStream">🟢 LIVE</span>
-    <span *ngIf="!localStream">🔴 OFF</span>
+
+    <span *ngIf="localStream">
+      🟢 LIVE
+    </span>
+
+    <span *ngIf="!localStream">
+      🔴 OFF
+    </span>
+
   </div>
 
   <div class="video-container">
+
+    <!-- PHONE'S OWN CAMERA -->
     <video
       #localVideo
       autoplay
       playsinline
       muted>
     </video>
-    <div class="no-camera" *ngIf="!localStream">
-      📷 <p>Camera Off</p>
-    </div>
-  </div>
 
-</div>
+    <div
+      class="no-camera"
+      *ngIf="!localStream">
 
-  <!-- LAPTOP VIEW -->
-  <div class="camera-card">
-
-    <div class="camera-header">
-
-      <span>💻 LAPTOP VIEW</span>
-
-      <span *ngIf="remoteStream">
-        🟢 LIVE
-      </span>
-
-      <span *ngIf="!remoteStream">
-        🟡 WAITING
-      </span>
-
-    </div>
-
-    <div class="video-container">
-
-      <video
-        #remoteVideo
-        autoplay
-        playsinline>
-      </video>
-
-      <div
-        class="no-camera"
-        *ngIf="!remoteStream">
-
-        🎥
-        <p>Waiting for Phone</p>
-
-      </div>
+      📷
+      <p>Camera Off</p>
 
     </div>
 
   </div>
 
+  <!-- CAPTURE PHONE CAMERA -->
+  <app-capturephoto
+    [videoElement]="localVideo"
+    (photoCaptured)="sendPhoto($event)">
+  </app-capturephoto>
+
 </div>
 
+<!-- Laptop View -->
 
+ <div class="camera-card">
 
+  <div class="camera-header">
+
+    <span>💻 LAPTOP VIEW</span>
+
+    <span *ngIf="remoteStream">
+      🟢 LIVE
+    </span>
+
+    <span *ngIf="!remoteStream">
+      🟡 WAITING
+    </span>
+
+  </div>
+
+  <div class="video-container">
+
+    <video
+      #remoteVideo
+      autoplay
+      playsinline>
+    </video>
+
+    <div
+      class="no-camera"
+      *ngIf="!remoteStream">
+
+      🎥
+      <p>Waiting for Phone</p>
+
+    </div>
+
+  </div>
+
+  <!-- CAPTURE LAPTOP VIEW -->
+<app-capturephoto
+  [videoElement]="remoteVideo"
+  (photoCaptured)="sendPhoto($event)">
+</app-capturephoto>
+
+</div>
     <!-- ================================================= -->
     <!-- PHONE: QR SCANNER -->
     <!-- ================================================= -->

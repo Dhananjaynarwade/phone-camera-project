@@ -1,0 +1,107 @@
+<nav class="navbar navbar-expand-lg bg-body-dark">
+  <div class="container-fluid">
+
+    <!-- Logo -->
+    <a class="navbar-brand" routerLink="/">
+      📱 Phone Camera
+    </a>
+
+    <!-- Mobile Menu Button -->
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#mainNavbar"
+      aria-controls="mainNavbar"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Navbar Menu -->
+    <div class="collapse navbar-collapse" id="mainNavbar">
+
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+        <!-- Home -->
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            routerLink="/"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            Home
+          </a>
+        </li>
+
+        <!-- Webcam -->
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            routerLink="/webcam"
+            routerLinkActive="active"
+          >
+            Webcam
+          </a>
+        </li>
+
+        <!-- About -->
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            routerLink="/about"
+            routerLinkActive="active"
+          >
+            About
+          </a>
+        </li>
+
+        <!-- Services -->
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            routerLink="/service"
+            routerLinkActive="active"
+          >
+            Service
+          </a>
+        </li>
+
+        <!-- Contact -->
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            routerLink="/contact"
+            routerLinkActive="active"
+          >
+            Contact
+          </a>
+        </li>
+
+      </ul>
+
+      <!-- Search -->
+      <form class="d-flex" role="search">
+
+        <input
+          class="form-control me-2"
+          type="search"
+          placeholder="Search"
+          aria-label="Search"
+        />
+
+        <button
+          class="btn btn-outline-success"
+          type="submit"
+        >
+          Search
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+</nav>

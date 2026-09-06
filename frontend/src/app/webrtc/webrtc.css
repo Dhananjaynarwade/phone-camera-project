@@ -4,28 +4,42 @@
 
 .droidcam {
   min-height: 100vh;
-  background: #101114;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(0, 210, 106, 0.08), transparent 30%),
+    radial-gradient(circle at 90% 90%, rgba(59, 130, 246, 0.08), transparent 30%),
+    #101114;
   color: white;
   padding: 25px;
   font-family: Arial, sans-serif;
 }
 
 
-/* HEADER */
+/* =====================================================
+   HEADER
+===================================================== */
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #191b20;
+
+  background: rgba(25, 27, 32, 0.92);
+  backdrop-filter: blur(12px);
+
   padding: 18px 25px;
-  border-radius: 12px;
+  border-radius: 14px;
+
   margin-bottom: 25px;
+
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  animation: slideDown 0.6s ease;
 }
 
 .header h1 {
   margin: 0;
   font-size: 28px;
+  letter-spacing: 0.5px;
 }
 
 .header span {
@@ -40,75 +54,147 @@
 }
 
 
-/* STATUS DOT */
+/* =====================================================
+   STATUS DOT
+===================================================== */
 
 .dot {
   width: 12px;
   height: 12px;
+
   background: #777;
   border-radius: 50%;
+
   display: inline-block;
+
+  transition: all 0.3s ease;
 }
 
 .dot.connected {
   background: #00d26a;
-  box-shadow: 0 0 10px #00d26a;
+
+  box-shadow:
+    0 0 8px #00d26a,
+    0 0 20px rgba(0, 210, 106, 0.5);
+
+  animation: pulse 1.8s infinite;
 }
 
 
-/* CAMERA AREA */
+/* =====================================================
+   CAMERA AREA
+===================================================== */
 
 .camera-area {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
   gap: 20px;
+
+  animation: fadeUp 0.7s ease;
 }
 
 
-/* CAMERA CARD */
+/* =====================================================
+   CAMERA CARD
+===================================================== */
 
 .camera-card {
-  background: #191b20;
-  border-radius: 12px;
+  background: rgba(25, 27, 32, 0.95);
+
+  border-radius: 14px;
+
   overflow: hidden;
+
+  margin-bottom: 15px;
+
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+
+  animation: cardAppear 0.6s ease both;
 }
+
+.camera-card:hover {
+  transform: translateY(-4px);
+
+  box-shadow:
+    0 12px 35px rgba(0, 0, 0, 0.35);
+}
+
+
+/* =====================================================
+   CAMERA HEADER
+===================================================== */
 
 .camera-header {
-  padding: 14px 18px;
+  padding: 15px 18px;
+
   display: flex;
   justify-content: space-between;
+  align-items: center;
+
   background: #22242a;
+
   font-weight: bold;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 
-/* VIDEO */
+/* =====================================================
+   VIDEO
+===================================================== */
 
 .video-container {
   position: relative;
+
   width: 100%;
+
+  margin-top: 20px;
+
   height: 400px;
-  background: black;
+
+  background: #000;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
+  overflow: hidden;
 }
 
 video {
   width: 100%;
   height: 100%;
+
   object-fit: contain;
-  background: black;
+
+  background: #000;
+
+  transition: opacity 0.3s ease;
 }
 
 
-/* NO CAMERA */
+/* =====================================================
+   NO CAMERA
+===================================================== */
 
 .no-camera {
   position: absolute;
+
   text-align: center;
+
   color: #888;
+
   font-size: 18px;
+
+  animation: fadeIn 0.5s ease;
 }
 
 .no-camera p {
@@ -116,139 +202,286 @@ video {
 }
 
 
-/* CONTROLS */
+/* =====================================================
+   CONTROLS
+===================================================== */
 
 .controls {
   margin-top: 25px;
+
   display: flex;
+
   flex-wrap: wrap;
+
   gap: 10px;
+
   justify-content: center;
+
+  animation: fadeUp 0.8s ease;
 }
+
+
+/* =====================================================
+   BUTTON
+===================================================== */
 
 .btn {
   border: none;
-  border-radius: 8px;
+
+  border-radius: 9px;
+
   padding: 12px 18px;
+
   font-size: 15px;
+
   cursor: pointer;
+
   color: white;
+
   background: #292c33;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .btn:hover {
-  opacity: 0.85;
+  background: #343842;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+.btn:active {
+  transform: scale(0.96);
 }
 
 .btn:disabled {
   opacity: 0.4;
+
   cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
 }
 
 
-/* STATUS */
+/* =====================================================
+   STATUS
+===================================================== */
 
 .status-box {
   margin-top: 20px;
+
   padding: 15px;
-  background: #191b20;
-  border-radius: 8px;
+
+  background: rgba(25, 27, 32, 0.95);
+
+  border-radius: 9px;
+
   text-align: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  animation: fadeIn 0.7s ease;
 }
 
 
-/* PAIRING */
+/* =====================================================
+   PAIRING
+===================================================== */
 
 .pairing-section {
   margin: 25px auto;
-  max-width: 500px;
-  background: #191b20;
+
+  max-width: 600px;
+
+  background: rgba(25, 27, 32, 0.95);
+
   padding: 25px;
-  border-radius: 12px;
+
+  border-radius: 14px;
+
   text-align: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.25);
+
+  animation: fadeUp 0.6s ease;
 }
 
 .pairing-section h2 {
   margin-top: 0;
 }
 
+
+/* =====================================================
+   QR BUTTON
+===================================================== */
+
 .qr-button {
   border: none;
+
   padding: 12px 20px;
-background-color: red;
-  border-radius: 8px;
+
+  border-radius: 9px;
+
   background: #3b82f6;
+
   color: white;
+
   cursor: pointer;
+
   font-size: 15px;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
+
+.qr-button:hover {
+  background: #2563eb;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 8px 20px rgba(59, 130, 246, 0.35);
+}
+
+.qr-button:active {
+  transform: scale(0.96);
+}
+
+
+/* =====================================================
+   QR CONTAINER
+===================================================== */
 
 .qr-container {
-  margin-top: 20px;
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-align: center;
+
+  width: 100%;
+
+  animation: qrAppear 0.5s ease;
 }
 
+
+/* =====================================================
+   QR CODE IMAGE
+===================================================== */
+
 .qr-container img {
-  width: 250px;
-  max-width: 100%;
+  display: block;
+
+  width: 300px;
+
+  max-width: 85vw;
+
+  height: auto;
+
+  margin: 25px auto;
+
+  padding: 8px;
+
   background: white;
-  padding: 10px;
+
+  border: 3px solid #00d26a;
+
   border-radius: 10px;
+
+  box-shadow:
+    0 0 0 4px rgba(0, 210, 106, 0.08),
+    0 0 25px rgba(0, 210, 106, 0.15);
+
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.qr-container img:hover {
+  transform: scale(1.03);
+
+  box-shadow:
+    0 0 0 6px rgba(0, 210, 106, 0.08),
+    0 0 35px rgba(0, 210, 106, 0.25);
 }
 
 .qr-container p {
   color: #aaa;
+
+  margin: 10px 0;
 }
 
 
-/* MOBILE */
+/* =====================================================
+   QR SCANNER
+===================================================== */
 
-@media (max-width: 800px) {
-
-  .camera-area {
-    grid-template-columns: 1fr;
-  }
-
-  .header {
-    flex-direction: column;
-    gap: 15px;
-    text-align: center;
-  }
-
-  .video-container {
-    height: 300px;
-  }
-
-  .droidcam {
-    padding: 12px;
-  }
-
-}
 .qr-scanner-section {
   margin-top: 20px;
+
   text-align: center;
+
+  animation: fadeUp 0.5s ease;
 }
 
 .qr-scanner {
   margin-top: 20px;
+
   padding: 20px;
+
   border-radius: 12px;
+
   background: #111;
+
   text-align: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .qr-scanner video {
   width: 100%;
+
   max-width: 400px;
+
   height: 300px;
+
   object-fit: cover;
+
   border-radius: 12px;
+
   background: #000;
+
+  border: 2px solid rgba(0, 210, 106, 0.5);
 }
+
+
+/* =====================================================
+   SCANNER TEXT
+===================================================== */
 
 .qr-scanner p {
   color: white;
+
   margin: 15px 0;
 }
+
+
 /* =====================================================
    DEVICE PAIRING COLLAPSE
 ===================================================== */
@@ -265,6 +498,8 @@ background-color: red;
   padding: 5px 0 15px 0;
 
   user-select: none;
+
+  transition: opacity 0.2s ease;
 }
 
 .pairing-header:hover {
@@ -289,26 +524,298 @@ background-color: red;
   min-width: 30px;
 
   text-align: center;
+
+  transition: transform 0.3s ease;
 }
 
+
+/* =====================================================
+   PAIRING CONTENT
+===================================================== */
+
 .pairing-content {
-  border-top: 1px solid #ddd;
+  border-top: 1px solid #333;
 
   padding-top: 20px;
 
-  animation: pairingOpen 0.2s ease;
+  animation: pairingOpen 0.3s ease;
 }
+
+
+/* =====================================================
+   ANIMATIONS
+===================================================== */
+
+@keyframes fadeIn {
+
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+
+}
+
+
+@keyframes fadeUp {
+
+  from {
+    opacity: 0;
+
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+
+}
+
+
+@keyframes slideDown {
+
+  from {
+    opacity: 0;
+
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+
+}
+
+
+@keyframes cardAppear {
+
+  from {
+    opacity: 0;
+
+    transform: scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: scale(1);
+  }
+
+}
+
+
+@keyframes qrAppear {
+
+  from {
+    opacity: 0;
+
+    transform: scale(0.85);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: scale(1);
+  }
+
+}
+
+
+@keyframes pulse {
+
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(0, 210, 106, 0.6);
+  }
+
+  70% {
+    box-shadow:
+      0 0 0 10px rgba(0, 210, 106, 0);
+  }
+
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(0, 210, 106, 0);
+  }
+
+}
+
 
 @keyframes pairingOpen {
 
   from {
     opacity: 0;
-    transform: translateY(-5px);
+
+    transform: translateY(-8px);
   }
 
   to {
     opacity: 1;
+
     transform: translateY(0);
+  }
+
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 1000px) {
+
+  .droidcam {
+    padding: 18px;
+  }
+
+  .camera-area {
+    grid-template-columns: 1fr;
+  }
+
+  .video-container {
+    height: 380px;
+  }
+
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 600px) {
+
+  .droidcam {
+    padding: 10px;
+  }
+
+  .header {
+    flex-direction: column;
+
+    gap: 12px;
+
+    text-align: center;
+
+    padding: 16px;
+  }
+
+  .header h1 {
+    font-size: 22px;
+  }
+
+  .connection-status {
+    font-size: 14px;
+  }
+
+  .camera-area {
+    grid-template-columns: 1fr;
+
+    gap: 12px;
+  }
+
+  .camera-card {
+    border-radius: 10px;
+  }
+
+  .camera-header {
+    padding: 12px 14px;
+
+    font-size: 14px;
+  }
+
+  .video-container {
+    height: 250px;
+
+    margin-top: 10px;
+  }
+
+  .controls {
+    flex-direction: column;
+
+    gap: 8px;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .pairing-section {
+    width: 100%;
+
+    padding: 18px;
+
+    margin: 18px auto;
+  }
+
+  .qr-container img {
+    width: 250px;
+
+    max-width: 80vw;
+
+    padding: 7px;
+
+    margin: 20px auto;
+  }
+
+  .qr-scanner {
+    padding: 12px;
+  }
+
+  .qr-scanner video {
+    height: 250px;
+
+    max-width: 100%;
+  }
+
+}
+
+
+/* =====================================================
+   SMALL PHONES
+===================================================== */
+
+@media (max-width: 400px) {
+
+  .droidcam {
+    padding: 7px;
+  }
+
+  .header h1 {
+    font-size: 20px;
+  }
+
+  .video-container {
+    height: 220px;
+  }
+
+  .qr-container img {
+    width: 220px;
+  }
+
+}
+
+
+/* =====================================================
+   REDUCED MOTION
+   Accessibility
+===================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
   }
 
 }

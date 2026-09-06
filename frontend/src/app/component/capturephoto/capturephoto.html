@@ -1,0 +1,42 @@
+<div class="capture-container">
+
+  <div class="camera-icon">
+    📸
+  </div>
+
+  <button
+    type="button"
+    class="capture-btn"
+    (click)="capturePhoto()">
+    📸 Capture Photo
+  </button>
+
+  <div
+    *ngIf="capturedPhoto"
+    class="photo-preview">
+
+    <h3>Captured Photo</h3>
+
+    <img
+      [src]="capturedPhoto"
+      alt="Captured Photo">
+
+    <div class="photo-buttons">
+
+      <button
+        type="button"
+        (click)="savePhoto()">
+        💾 Save Photo
+      </button>
+
+      <button
+        type="button"
+        (click)="deletePhoto()">
+        🗑 Delete
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
